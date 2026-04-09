@@ -55,16 +55,8 @@
                 </a>
             @elseif ($role === 'peminjam')
                 <a href="{{ route('peminjam.dashboard') }}"
-                    class="list-group-item list-group-item-action nav-link {{ request()->routeIs('peminjam.dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-chart-line me-2"></i> Dashboard
-                </a>
-                <a href="{{ route('peminjam.alats.index') }}"
-                    class="list-group-item list-group-item-action nav-link {{ request()->routeIs('peminjam.alats.*') ? 'active' : '' }}">
-                    <i class="fas fa-tools me-2"></i> Daftar Alat
-                </a>
-                <a href="{{ route('peminjam.peminjamans.index') }}"
-                    class="list-group-item list-group-item-action nav-link {{ request()->routeIs('peminjam.peminjamans.*') ? 'active' : '' }}">
-                    <i class="fas fa-clipboard-list me-2"></i> Riwayat Peminjaman
+                    class="list-group-item list-group-item-action nav-link {{ request()->routeIs('peminjam.dashboard') || request()->routeIs('peminjam.peminjamans.*') ? 'active' : '' }}">
+                    <i class="fas fa-hand-holding-heart me-2"></i> Peminjaman Alat
                 </a>
             @endif
         </div>

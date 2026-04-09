@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\PengembalianController as AdminPengembalianContro
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\Peminjam\AlatController as PeminjamAlatController;
 use App\Http\Controllers\Peminjam\DashboardController as PeminjamDashboard;
 use App\Http\Controllers\Peminjam\PeminjamanController as PeminjamPeminjamanController;
 use App\Http\Controllers\Petugas\DashboardController as PetugasDashboard;
@@ -72,13 +71,7 @@ Route::middleware(['auth', 'petugas'])->prefix('petugas')->name('petugas.')->gro
 Route::middleware(['auth', 'peminjam'])->prefix('peminjam')->name('peminjam.')->group(function () {
     Route::get('dashboard', [PeminjamDashboard::class, 'index'])->name('dashboard');
 
-    // Daftar Alat
-    Route::get('alats', [PeminjamAlatController::class, 'index'])->name('alats.index');
-    Route::get('alats/{alat}', [PeminjamAlatController::class, 'show'])->name('alats.show');
-
     // Peminjaman
-    Route::get('peminjamans', [PeminjamPeminjamanController::class, 'index'])->name('peminjamans.index');
-    Route::get('peminjamans/create', [PeminjamPeminjamanController::class, 'create'])->name('peminjamans.create');
     Route::post('peminjamans', [PeminjamPeminjamanController::class, 'store'])->name('peminjamans.store');
-    Route::get('peminjamans/{peminjaman}', [PeminjamPeminjamanController::class, 'show'])->name('peminjamans.show');
+    Route::post('peminjamans/{peminjaman}/return', [PeminjamPeminjamanController::class, 'return'])->name('peminjamans.return');
 });

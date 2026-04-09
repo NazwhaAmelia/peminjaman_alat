@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $tanggal_pinjam
  * @property string $tanggal_kembali_rencana
  * @property string $status
+ * @property int $pengembalian_id
  */
 class Peminjaman extends Model
 {
@@ -27,6 +28,7 @@ class Peminjaman extends Model
         'tanggal_pinjam',
         'tanggal_kembali_rencana',
         'status',
+        'pengembalian_id',
     ];
 
     protected function casts(): array
