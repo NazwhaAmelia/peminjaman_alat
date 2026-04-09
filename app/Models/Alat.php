@@ -5,6 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $nama_alat
+ * @property string $deskripsi
+ * @property int $kategori_id
+ * @property int $jumlah_tersedia
+ * @property string $kondisi
+ */
 class Alat extends Model
 {
     use HasFactory;

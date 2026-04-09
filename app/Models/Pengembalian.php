@@ -5,6 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $peminjaman_id
+ * @property string $tanggal_kembali
+ * @property string $kondisi_alat
+ * @property numeric $denda
+ */
 class Pengembalian extends Model
 {
     use HasFactory;
