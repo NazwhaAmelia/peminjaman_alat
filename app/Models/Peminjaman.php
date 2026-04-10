@@ -29,6 +29,8 @@ class Peminjaman extends Model
         'tanggal_kembali_rencana',
         'status',
         'pengembalian_id',
+        'alasan_ditolak',
+        'notif_dilihat', 
     ];
 
     protected function casts(): array

@@ -24,16 +24,20 @@
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Daftar Peminjaman</h5>
             <div class="btn-group" role="group">
-                <input type="radio" class="btn-check" name="status-filter" id="status-all" value="" checked>
+                <input type="radio" class="btn-check" name="status-filter" id="status-all" value=""
+                    {{ request('status') == '' ? 'checked' : '' }}>
                 <label class="btn btn-outline-primary btn-sm" for="status-all">Semua</label>
 
-                <input type="radio" class="btn-check" name="status-filter" id="status-pending" value="pending">
+                <input type="radio" class="btn-check" name="status-filter" id="status-pending" value="pending"
+                    {{ request('status') == 'pending' ? 'checked' : '' }}>
                 <label class="btn btn-outline-warning btn-sm" for="status-pending">Pending</label>
 
-                <input type="radio" class="btn-check" name="status-filter" id="status-approved" value="disetujui">
+                <input type="radio" class="btn-check" name="status-filter" id="status-approved" value="disetujui"
+                    {{ request('status') == 'disetujui' ? 'checked' : '' }}>
                 <label class="btn btn-outline-success btn-sm" for="status-approved">Disetujui</label>
 
-                <input type="radio" class="btn-check" name="status-filter" id="status-rejected" value="ditolak">
+                <input type="radio" class="btn-check" name="status-filter" id="status-rejected" value="ditolak"
+                    {{ request('status') == 'ditolak' ? 'checked' : '' }}>
                 <label class="btn btn-outline-danger btn-sm" for="status-rejected">Ditolak</label>
             </div>
         </div>

@@ -11,8 +11,10 @@ class PeminjamanController extends Controller
     public function index()
     {
         $peminjamans = Peminjaman::with('user', 'alat')
+            ->when(request('status'), fn($q) => $q->where('status', request('status')))
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.peminjamans.index', compact('peminjamans'));
     }
@@ -50,5 +52,14 @@ class PeminjamanController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Peminjaman berhasil ditolak');
+    }
+    public function print()
+    {
+        $peminjamans = Peminjaman::with('user', 'alat')
+            ->when(request('status'), fn($q) => $q->where('status', request('status')))
+            ->latest()
+            ->get();
+
+        return view('admin.peminjamans.print', compact('peminjamans'));
     }
 }

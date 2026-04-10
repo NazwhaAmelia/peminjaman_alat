@@ -24,25 +24,33 @@
 
 <div class="card">
     <div class="card-header bg-light border-bottom">
+    <form method="GET" action="{{ route('admin.users.index') }}">
         <div class="row align-items-center">
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="fas fa-search"></i>
                     </span>
-                    <input type="text" class="form-control border-start-0" placeholder="Cari nama, email, atau peran...">
+                    <input type="text" name="search" class="form-control border-start-0"
+                        placeholder="Cari nama, email, atau peran..."
+                        value="{{ request('search') }}">
                 </div>
             </div>
             <div class="col-md-6 text-end">
-                <select class="form-select form-select-sm d-inline-block" style="width: auto;">
+                <select name="role" class="form-select form-select-sm d-inline-block"
+                    style="width: auto;" onchange="this.form.submit()">
                     <option value="">Semua Peran</option>
-                    <option value="admin">Admin</option>
-                    <option value="petugas">Petugas</option>
-                    <option value="peminjam">Peminjam</option>
+                    <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="petugas" {{ request('role') == 'petugas' ? 'selected' : '' }}>Petugas</option>
+                    <option value="peminjam" {{ request('role') == 'peminjam' ? 'selected' : '' }}>Peminjam</option>
                 </select>
+                <button type="submit" class="btn btn-sm btn-primary ms-1">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
         </div>
-    </div>
+    </form>
+</div>
 
     <div class="card-body p-0">
         @if ($users->isEmpty())

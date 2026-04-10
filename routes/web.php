@@ -61,10 +61,16 @@ Route::middleware(['auth', 'petugas'])->prefix('petugas')->name('petugas.')->gro
     Route::get('dashboard', [PetugasDashboard::class, 'index'])->name('dashboard');
 
     // Peminjaman Management
-    Route::resource('peminjamans', PetugasPeminjamanController::class);
+    Route::get('peminjamans/print', [PetugasPeminjamanController::class, 'print'])->name('peminjamans.print'); // ✅ TAMBAH DI SINI
+    Route::get('peminjamans', [PetugasPeminjamanController::class, 'index'])->name('peminjamans.index');
+    Route::get('peminjamans/{peminjaman}', [PetugasPeminjamanController::class, 'show'])->name('peminjamans.show');
+    Route::post('peminjamans/{peminjaman}/approve', [PetugasPeminjamanController::class, 'approve'])->name('peminjamans.approve');
+    Route::post('peminjamans/{peminjaman}/reject', [PetugasPeminjamanController::class, 'reject'])->name('peminjamans.reject');
 
     // Pengembalian Management
-    Route::resource('pengembalians', PengembalianController::class);
+    Route::get('pengembalians/print', [PengembalianController::class, 'print'])->name('pengembalians.print'); // ✅ TAMBAH DI SINI
+    Route::get('pengembalians', [PengembalianController::class, 'index'])->name('pengembalians.index');
+    Route::get('pengembalians/{pengembalian}', [PengembalianController::class, 'show'])->name('pengembalians.show');
 });
 
 // Peminjam Routes

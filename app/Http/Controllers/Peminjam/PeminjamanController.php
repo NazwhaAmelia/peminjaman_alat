@@ -62,17 +62,27 @@ class PeminjamanController extends Controller
             'kondisi_alat' => 'required|in:baik,rusak,hilang',
         ]);
 
-        // Create pengembalian
+        // Calculate denda based on condition and lateness
         $denda = 0;
+        $kondisiAlat = $validated['kondisi_alat'];
+
+        // Denda berdasarkan kondisi x jumlah alat
+        if ($kondisiAlat === 'rusak') {
+            $denda = 100000 * $peminjaman->jumlah_pinjam;
+        } elseif ($kondisiAlat === 'hilang') {
+            $denda = 500000 * $peminjaman->jumlah_pinjam;
+        }
+
+        // Tambahkan denda keterlambatan jika ada
         if ($peminjaman->tanggal_kembali_rencana < now()->toDateString()) {
             $late_days = now()->diffInDays($peminjaman->tanggal_kembali_rencana);
-            $denda = $late_days * 50000; // Rp 50.000 per hari
+            $denda += $late_days * 50000; // Rp 50.000 per hari
         }
 
         $pengembalian = Pengembalian::create([
             'peminjaman_id' => $peminjaman->id,
             'tanggal_kembali' => now()->toDateString(),
-            'kondisi_alat' => $validated['kondisi_alat'],
+            'kondisi_alat' => $kondisiAlat,
             'denda' => $denda,
         ]);
 
@@ -83,21 +93,50 @@ class PeminjamanController extends Controller
         ]);
 
         // Update alat availability
-        if ($validated['kondisi_alat'] === 'baik') {
+        if ($kondisiAlat === 'baik') {
             $peminjaman->alat->increment('jumlah_tersedia', $peminjaman->jumlah_pinjam);
-        } elseif ($validated['kondisi_alat'] === 'rusak') {
+        } elseif ($kondisiAlat === 'rusak') {
             $peminjaman->alat->update(['kondisi' => 'rusak']);
-        } elseif ($validated['kondisi_alat'] === 'hilang') {
+        } elseif ($kondisiAlat === 'hilang') {
             $peminjaman->alat->decrement('jumlah_tersedia', $peminjaman->jumlah_pinjam);
+        }
+
+        // Log aktivitas untuk semua kasus
+        $logDeskripsi = "Mengembalikan {$peminjaman->alat->nama_alat} dalam kondisi {$kondisiAlat}";
+
+        // Tambahkan info denda dan notifikasi jika rusak/hilang
+        if ($kondisiAlat === 'rusak' || $kondisiAlat === 'hilang') {
+            $logDeskripsi .= ' | Denda: Rp '.number_format($denda, 0, ',', '.');
+
+            if ($kondisiAlat === 'rusak') {
+                $logDeskripsi .= ' | [ALERT] Alat rusak - perlu diperiksa oleh petugas';
+            } elseif ($kondisiAlat === 'hilang') {
+                $logDeskripsi .= ' | [ALERT PENTING] Alat HILANG - perlu penyelidikan segera';
+            }
         }
 
         LogAktifitas::create([
             'user_id' => auth()->id(),
             'aktivitas' => 'Kembalikan Peminjaman',
-            'deskripsi' => "Mengembalikan {$peminjaman->alat->nama_alat} dalam kondisi {$validated['kondisi_alat']}",
+            'deskripsi' => $logDeskripsi,
             'waktu' => now()->toTimeString(),
         ]);
 
-        return redirect()->route('peminjam.dashboard')->with('success', 'Alat berhasil dikembalikan');
+        // Log khusus untuk admin/petugas jika ada kendala
+        if ($kondisiAlat === 'rusak' || $kondisiAlat === 'hilang') {
+            LogAktifitas::create([
+                'user_id' => auth()->id(),
+                'aktivitas' => $kondisiAlat === 'rusak' ? '⚠ ALERT: Alat Rusak' : '✕ ALERT PENTING: Alat Hilang',
+                'deskripsi' => "Peminjam: {$peminjaman->user->name} | Alat: {$peminjaman->alat->nama_alat} | Denda: Rp ".number_format($denda, 0, ',', '.'),
+                'waktu' => now()->toTimeString(),
+            ]);
+        }
+
+        $message = 'Alat berhasil dikembalikan';
+        if ($denda > 0) {
+            $message .= ' | Denda: Rp '.number_format($denda, 0, ',', '.');
+        }
+
+        return redirect()->route('peminjam.dashboard')->with('success', $message);
     }
 }

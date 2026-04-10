@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers\Peminjam;
-
 use App\Http\Controllers\Controller;
 use App\Models\Alat;
 use App\Models\Kategori;
@@ -11,12 +9,10 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Get available equipment with availability > 0
         $alats = Alat::with('kategori')
             ->where('jumlah_tersedia', '>', 0)
             ->get();
 
-        // Get current user's ongoing loans
         $peminjamans = Peminjaman::with('alat', 'pengembalian')
             ->where('user_id', auth()->id())
             ->where('status', 'disetujui')
@@ -24,9 +20,23 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Get categories for filter
         $kategoris = Kategori::all();
 
-        return view('peminjam.dashboard', compact('alats', 'peminjamans', 'kategoris'));
+        // ✅ Cek peminjaman yang baru ditolak dan belum dilihat
+        $penolakanBaru = Peminjaman::with('alat')
+            ->where('user_id', auth()->id())
+            ->where('status', 'ditolak')
+            ->where('notif_dilihat', false)
+            ->get();
+
+        // ✅ Tandai semua sebagai sudah dilihat
+        if ($penolakanBaru->isNotEmpty()) {
+            Peminjaman::where('user_id', auth()->id())
+                ->where('status', 'ditolak')
+                ->where('notif_dilihat', false)
+                ->update(['notif_dilihat' => true]);
+        }
+
+        return view('peminjam.dashboard', compact('alats', 'peminjamans', 'kategoris', 'penolakanBaru'));
     }
 }

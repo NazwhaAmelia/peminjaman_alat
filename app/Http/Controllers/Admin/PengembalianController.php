@@ -22,4 +22,12 @@ class PengembalianController extends Controller
 
         return view('admin.pengembalians.show', compact('pengembalian'));
     }
+    public function print()
+    {
+        $pengembalians = Pengembalian::with('peminjaman.user', 'peminjaman.alat')
+            ->latest()
+            ->get();
+
+        return view('petugas.pengembalians.print', compact('pengembalians'));
+    }
 }

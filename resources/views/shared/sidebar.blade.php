@@ -47,11 +47,11 @@
                 </a>
                 <a href="{{ route('petugas.peminjamans.index') }}"
                     class="list-group-item list-group-item-action nav-link {{ request()->routeIs('petugas.peminjamans.*') ? 'active' : '' }}">
-                    <i class="fas fa-handshake me-2"></i> Peminjaman
+                    <i class="fas fa-clipboard-check me-2"></i> Menyetujui Peminjaman
                 </a>
                 <a href="{{ route('petugas.pengembalians.index') }}"
                     class="list-group-item list-group-item-action nav-link {{ request()->routeIs('petugas.pengembalians.*') ? 'active' : '' }}">
-                    <i class="fas fa-undo me-2"></i> Pengembalian
+                    <i class="fas fa-clipboard-list me-2"></i> Memantau Pengembalian
                 </a>
             @elseif ($role === 'peminjam')
                 <a href="{{ route('peminjam.dashboard') }}"

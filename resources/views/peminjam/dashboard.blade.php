@@ -3,6 +3,27 @@
 @section('title', 'Daftar Alat & Peminjaman - Peminjam')
 
 @section('content')
+
+{{-- ✅ Toast notifikasi penolakan --}}
+@if($penolakanBaru->isNotEmpty())
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        @foreach($penolakanBaru as $tolak)
+            <div class="toast show align-items-center text-bg-danger border-0 mb-2" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-times-circle me-2"></i>
+                        <strong>Peminjaman Ditolak</strong><br>
+                        Alat: <strong>{{ $tolak->   alat->nama_alat }}</strong><br>
+                        Alasan: {{ $tolak->alasan_ditolak }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endif
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h3 class="mb-1">
@@ -75,7 +96,7 @@
                         </thead>
                         <tbody>
                             @forelse ($alats as $index => $alat)
-                                <tr>
+                                <tr data-kategori="{{ $alat->kategori->id }}">
                                     <td>{{ $index + 1 }}</td>
                                     <td>
                                         <strong>{{ $alat->nama_alat }}</strong>
@@ -118,7 +139,7 @@
             </div>
 
             <div class="card-body">
-                <form id="pinjamForm" action="" method="POST">
+                <form id="pinjamForm" action="{{ route('peminjam.peminjamans.store') }}" method="POST">
                     @csrf
 
                     <div class="mb-3">
@@ -273,7 +294,7 @@
 <div class="modal fade" id="kembalikanModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="kembalikanForm" method="POST">
+            <form id="kembalikanForm" method="POST" action="" onsubmit="return handleKembaliSubmit(event)">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Kembalikan Alat</h5>
@@ -284,17 +305,18 @@
 
                     <div class="mb-3">
                         <label for="kondisiAlat" class="form-label">Kondisi Alat</label>
-                        <select class="form-select" id="kondisiAlat" name="kondisi_alat" required>
+                        <select class="form-select" id="kondisiAlat" name="kondisi_alat" required onchange="updateDendaInfo()">
                             <option value="">-- Pilih Kondisi --</option>
-                            <option value="baik">✓ Baik (Tidak ada kerusakan)</option>
-                            <option value="rusak">⚠ Rusak (Ada kerusakan minor)</option>
-                            <option value="hilang">✕ Hilang (Alat tidak ditemukan)</option>
+                            <option value="baik">✓ Baik (Tidak ada kerusakan) - Rp 0</option>
+                            <option value="rusak">⚠ Rusak (Ada kerusakan) - Rp 100.000</option>
+                            <option value="hilang">✕ Hilang (Alat tidak ditemukan) - Rp 500.000</option>
                         </select>
+                        <small class="text-muted d-block mt-2" id="dendaInfo"></small>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-warning" onclick="return confirm('Pastikan kondisi alat sudah benar. Perubahan status tidak dapat dibatalkan.')">
+                    <button type="submit" class="btn btn-warning">
                         <i class="fas fa-undo me-1"></i> Nominalkan Pengembalian
                     </button>
                 </div>
@@ -304,40 +326,108 @@
 </div>
 
 @push('scripts')
-    <script>
-        // Modal untuk peminjaman
-        const pinjamModal = document.getElementById('pinjamModal');
-        pinjamModal.addEventListener('show.bs.modal', function(e) {
-            const button = e.relatedTarget;
-            document.getElementById('namaPinjam').value = button.dataset.alatId;
-            document.getElementById('modalAlatName').textContent = button.dataset.alatName;
-            document.getElementById('pinjamForm').action = '{{ route("peminjam.peminjamans.store") }}';
-        });
+<script>
+    // Modal untuk peminjaman
+    const pinjamModal = document.getElementById('pinjamModal');
+    pinjamModal.addEventListener('show.bs.modal', function(e) {
+        const button = e.relatedTarget;
+        document.getElementById('namaPinjam').value = button.dataset.alatId;
+        document.getElementById('modalAlatName').textContent = button.dataset.alatName;
+    });
 
-        // Modal untuk pengembalian
-        const kembalikanModal = document.getElementById('kembalikanModal');
-        kembalikanModal.addEventListener('show.bs.modal', function(e) {
-            const button = e.relatedTarget;
-            const peminjamanId = button.dataset.peminjamanId;
-            document.getElementById('modalKembaliAlatName').textContent = button.dataset.alatName;
-            document.getElementById('kembalikanForm').action = `/peminjam/peminjamans/${peminjamanId}/return`;
-        });
+    // Modal untuk pengembalian
+    const kembalikanModal = document.getElementById('kembalikanModal');
+    kembalikanModal.addEventListener('show.bs.modal', function(e) {
+        const button = e.relatedTarget;
+        const peminjamanId = button.dataset.peminjamanId;
+        document.getElementById('modalKembaliAlatName').textContent = button.dataset.alatName;
+        
+        // Set action langsung saat modal dibuka
+        document.getElementById('kembalikanForm').action = `/peminjam/peminjamans/${peminjamanId}/return`;
+        
+        // Reset kondisi
+        document.getElementById('kondisiAlat').value = '';
+        updateDendaInfo();
+    });
 
-        // Button tambah/kurang
-        document.getElementById('btnTambah').addEventListener('click', function() {
-            const input = document.getElementById('jumlahAlat');
-            input.value = parseInt(input.value) + 1;
-        });
+    // Handle submit - HANYA untuk konfirmasi dialog
+    function handleKembaliSubmit(event) {
+        if (!confirm('Pastikan kondisi alat sudah benar. Perubahan status tidak dapat dibatalkan.')) {
+            event.preventDefault();
+            return false;
+        }
+        // Biarkan form submit normal, action sudah di-set saat modal dibuka
+        return true;
+    }
 
-        document.getElementById('btnKurang').addEventListener('click', function() {
-            const input = document.getElementById('jumlahAlat');
-            if (input.value > 1) {
-                input.value = parseInt(input.value) - 1;
-            }
-        });
+    // Update denda info
+    function updateDendaInfo() {
+        const kondisi = document.getElementById('kondisiAlat').value;
+        const dendaInfo = document.getElementById('dendaInfo');
+        
+        switch(kondisi) {
+            case 'baik':
+                dendaInfo.textContent = '✓ Tidak ada denda. Terima kasih telah mengembalikan alat dalam kondisi baik!';
+                dendaInfo.className = 'text-success d-block mt-2';
+                break;
+            case 'rusak':
+                dendaInfo.textContent = '⚠ Denda Rp 100.000 untuk kerusakan. Alat akan dicatat sebagai rusak dan tidak tersedia sementara waktu.';
+                dendaInfo.className = 'text-warning d-block mt-2';
+                break;
+            case 'hilang':
+                dendaInfo.textContent = '✕ Denda Rp 500.000 untuk alat yang hilang. Petugas akan menghubungi Anda untuk verifikasi lebih lanjut.';
+                dendaInfo.className = 'text-danger d-block mt-2';
+                break;
+            default:
+                dendaInfo.textContent = '';
+                dendaInfo.className = 'text-muted d-block mt-2';
+        }
+    }
 
-        // Set minimum date untuk tanggal kembali
-        document.getElementById('tanggalKembaliRencana').min = new Date().toISOString().split('T')[0];
-    </script>
+    // Button tambah/kurang
+    document.getElementById('btnTambah').addEventListener('click', function() {
+        const input = document.getElementById('jumlahAlat');
+        input.value = parseInt(input.value) + 1;
+    });
+
+    document.getElementById('btnKurang').addEventListener('click', function() {
+        const input = document.getElementById('jumlahAlat');
+        if (input.value > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    });
+
+    // Set minimum date
+    document.getElementById('tanggalKembaliRencana').min = new Date().toISOString().split('T')[0];
+
+    // Search dan filter alat
+    const searchInput = document.getElementById('searchAlat');
+    const filterKategori = document.getElementById('filterKategori');
+    const tableRows = document.querySelectorAll('tbody tr[data-kategori]');
+
+    function filterAlat() {
+        const keyword = searchInput.value.toLowerCase();
+        const kategori = filterKategori.value;
+
+        tableRows.forEach(row => {
+            const namaAlat = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            const rowKategori = row.dataset.kategori;
+
+            const matchSearch = namaAlat.includes(keyword);
+            const matchKategori = kategori === '' || rowKategori === kategori;
+
+            row.style.display = matchSearch && matchKategori ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterAlat);
+    filterKategori.addEventListener('change', filterAlat);
+
+    document.getElementById('btnSegarkan').addEventListener('click', function() {
+        searchInput.value = '';
+        filterKategori.value = '';
+        filterAlat();
+    });
+</script>
 @endpush
 @endsection
